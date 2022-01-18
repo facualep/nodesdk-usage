@@ -1,0 +1,216 @@
+openapi: 3.0.0
+info:
+  description: Node backend template API
+  version: 1.0.0
+  title: Node backend template
+  contact:
+    email: hola@houlak.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: user
+    description: Users
+paths:
+  /users:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: ''
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: User to create
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  '/users/{userId}/following':
+    post:
+      tags:
+        - user
+      summary: Follow a user
+      description: ''
+      operationId: followUser
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                followedId:
+                  type: number
+        description: User to follow
+        required: true
+      responses:
+        '200':
+          description: successful operation
+    get:
+      tags:
+        - user
+      summary: Get the users followed by the user
+      description: ''
+      operationId: getFollowed
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  following:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+  '/users/{userId}/followers':
+    get:
+      tags:
+        - user
+      summary: Get the user followers
+      description: ''
+      operationId: getFollowers
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  followers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+servers:
+  - url: localhost:4040/api
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - name
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        mobileNumber:
+          type: string
+        deaf:
+          type: boolean
+        firstName:
+          type: string
+        lastName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        photo:
+          type: string
+          format: binary
+        tyc:
+          type: boolean
+    Country:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      xml:
+        name: Country
+    Category:
+      type: object
+      required:
+        - name
+        - country
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        country:
+          $ref: '#/components/schemas/Country'
+      xml:
+        name: Category
+    Video:
+      type: object
+      required:
+        - path
+      properties:
+        id:
+          type: integer
+        path:
+          type: string
+      xml:
+        name: Video
+    Word:
+      type: object
+      required:
+        - meaning
+      properties:
+        id:
+          type: integer
+        meaning:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        videos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Video'
+      xml:
+        name: Word
+    WordDetail:
+      type: object
+      required:
+        - meaning
+      properties:
+        id:
+          type: integer
+        meaning:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        videoUrls:
+          type: array
+          items:
+            type: string
+      xml:
+        name: WordDetail

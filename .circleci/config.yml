@@ -1,0 +1,132 @@
+version: 2.1
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:12.7
+    steps:
+      - checkout
+      # Try to restore the cache corresponding to the last updated dependencies,
+      # if it's a miss, restore the latest cache available
+      - restore_cache:
+          name: Restore project dependencies cache
+          keys:
+            - v1.0-dependencies-{{ checksum "yarn.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1.0-dependencies-
+      - run:
+          name: Install project dependencies
+          command: yarn install
+
+      - save_cache:
+          name: Save project dependencies cache
+          paths:
+            - ~/.cache/yarn
+            - node_modules
+          key: v1.0-dependencies-{{ checksum "yarn.lock" }}
+
+      # Restore documentation cache
+      - restore_cache:
+          name: Restore documentation cache
+          keys:
+            - docs-{{ checksum "documentation/openapi.yaml" }}
+      - run:
+          name: Install documentation
+          command: |
+            if [ ! -f redoc-static.html ]; then npm run build-docs; fi
+      - save_cache:
+          name: Save documentation cache
+          paths:
+            - redoc-static.html
+          key: docs-{{ checksum "documentation/openapi.yaml" }}
+
+      # TODO:
+      # # run tests!
+      # - run:
+      #     name: Run tests
+      #     command: |
+      #       npm test
+
+      # build
+      - run:
+          name: Build
+          command: npm run build
+
+      # TODO: fix this, is ugly
+      # cp init.sh
+      - run:
+          command: cp init.sh dist/
+
+      # Persist the specified paths into the workspace for use in downstream job.
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: ~/repo
+          # Must be relative path from root
+          paths:
+            - ./dist
+            - ./init.sh
+            - ./node_modules
+            - ./redoc-static.html
+
+  deploy:
+    working_directory: ~/repo
+    docker:
+      - image: rohara/node:6.10.3-rsync
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/repo
+
+      # add ssh fingerprint
+      - run: mkdir ~/.ssh
+      - run: echo 'dev.houlak.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJX+kw/rWuQCM6NR6fMvov74RufclN0OjZHNw8HekzHYeGziwYsGvl8T+ZoXEYWS1n8Pp1FWvMw2TjrVVpPiAVs=' >> ~/.ssh/known_hosts
+      - run: echo 'qa.houlak.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJX+kw/rWuQCM6NR6fMvov74RufclN0OjZHNw8HekzHYeGziwYsGvl8T+ZoXEYWS1n8Pp1FWvMw2TjrVVpPiAVs=' >> ~/.ssh/known_hosts
+      - run: echo 'houlak.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBItjtDCEWrYuMbOSLTChhKj3fWoF3Kd1Sgp9sqkbNXfVDFQus3++z+F6wBJ8PgsWAB8gb11od5ij4KhzEeiicuo=' >> ~/.ssh/known_hosts
+
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "dev" ]; then
+              ssh bitnami@dev.houlak.com mkdir -p /home/bitnami/apps/dev/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/ bitnami@dev.houlak.com:/home/bitnami/apps/dev/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/redoc-static.html bitnami@dev.houlak.com:/home/bitnami/htdocs/dev/docs/**PROJECT-NAME**.html
+            elif [ "${CIRCLE_BRANCH}" == "qa" ]; then
+              ssh bitnami@qa.houlak.com mkdir -p /home/bitnami/apps/qa/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/ bitnami@qa.houlak.com:/home/bitnami/apps/qa/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/redoc-static.html bitnami@dev.houlak.com:/home/bitnami/htdocs/qa/docs/**PROJECT-NAME**.html
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+              ssh bitnami@houlak.com mkdir -p /home/bitnami/apps/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/ bitnami@houlak.com:/home/bitnami/apps/**PROJECT-NAME**-backend
+              rsync -qavzhe ssh ~/repo/redoc-static.html bitnami@dev.houlak.com:/home/bitnami/htdocs/docs/**PROJECT-NAME**.html
+            fi
+
+      # start server
+      - run: |
+          if [ "${CIRCLE_BRANCH}" == "dev" ]; then
+            ssh bitnami@dev.houlak.com 'source  ~/.zshrc; /home/bitnami/apps/dev/**PROJECT-NAME**-backend/init.sh'
+          elif [ "${CIRCLE_BRANCH}" == "qa" ]; then
+            ssh bitnami@qa.houlak.com 'source  ~/.zshrc; /home/bitnami/apps/qa/**PROJECT-NAME**-backend/init.sh'
+          elif [ "${CIRCLE_BRANCH}" == "master" ]; then
+            ssh bitnami@houlak.com 'source  ~/.zshrc; /home/bitnami/apps/**PROJECT-NAME**-backend/init.sh'
+          fi
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - dev
+                - qa
+                - master
+      - deploy:
+          requires:
+            - build
+          post-steps:
+          filters:
+            branches:
+              only:
+                - dev
+                - qa
+                - master

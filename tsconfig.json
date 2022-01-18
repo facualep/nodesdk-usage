@@ -1,0 +1,41 @@
+{
+  "files": [
+    "src/server.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitAny": false,
+    "target": "es2016",
+    "lib": [
+      "es2016"
+    ],
+    "outDir": "dist",
+    "rootDir": "",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "baseUrl": "./src",
+    "moduleResolution": "node",
+    "removeComments": true,
+    "typeRoots": ["node_modules/@types"],
+    "paths": {
+      "services/*": ["services/*"],
+      "routes/*": ["routes/*"],
+      "enums/*": ["enums/*"],
+      "models/*": ["models/*"],
+      "src/*": ["*"],
+      "*": [
+        "../node_modules/@types/*",
+        "types/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,3 @@
+[submodule "src/node-sdk"]
+	path = src/node-sdk
+	url = git@github.com:Houlak/px-node-sdk.git

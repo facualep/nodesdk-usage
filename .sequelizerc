@@ -1,0 +1,21 @@
+const path = require('path')
+const dotenv = require('dotenv')
+if (process.env.ENV && process.env.ENV.toUpperCase() === 'TEST') {
+  dotenv.config({ path: '.env.test'})
+} else {
+  dotenv.config()
+}
+
+let config = {
+  'config': path.resolve('dist/src/config', 'db.js'),
+  'migrations-path': path.resolve('', 'migrations'),
+  'models-path': path.resolve('dist/src', 'models'),
+}
+
+const env = process.env.ENV.toLowerCase()
+if (env == 'local' || env == 'test') {
+  config['config'] = path.resolve('src/config', 'db.ts')
+  config['models-path'] = path.resolve('src', 'models')
+}
+
+module.exports = config
