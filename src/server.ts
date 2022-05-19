@@ -3,8 +3,8 @@ configureEnvironment()
 
 import App from './app'
 import logger from './lib/logger.lib'
-import { checkCrypto } from './node-sdk/src'
-import { CertificateHelper } from './node-sdk/src/helpers/signature/signatureHelper'
+import { checkCrypto } from './px-node-sdk/src'
+import { CertificateHelper } from './px-node-sdk/src/helpers/signature/signatureHelper'
 
 const port = parseInt(process.env.PORT) || 3000
 const app = new App()

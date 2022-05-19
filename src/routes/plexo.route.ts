@@ -2,8 +2,8 @@ import { ApiError } from "enums/error.enum";
 import { Router } from "express";
 import { CustomError } from "src/lib/custom_error.lib";
 import { WSresponse } from "src/lib/WSresponse.lib";
-import { ActionType, AuthorizationType, FieldType } from "src/node-sdk/src";
-import { Authorization } from "src/node-sdk/src/models/Authorization";
+import { ActionType, AuthorizationType, FieldType } from "src/px-node-sdk/src";
+import { Authorization } from "src/px-node-sdk/src/models/Authorization";
 import { AuthorizationRequest } from "src/types/AuthorizationRequest";
 import { instrumentsService } from 'src/services/plexoClient/instruments.service'
 

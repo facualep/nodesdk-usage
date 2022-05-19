@@ -1,4 +1,4 @@
-import { Commerce, CommerceRequest, PaymentGatewayClient } from "src/node-sdk/src";
+import { Commerce, CommerceRequest, PaymentGatewayClient } from "src/px-node-sdk/src";
 
 const createCommerce = async(commerceName: string) : Promise<Commerce> => {
 	const plexoClient = new PaymentGatewayClient()

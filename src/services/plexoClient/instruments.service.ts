@@ -1,4 +1,4 @@
-import { Authorization, PaymentGatewayClient } from "src/node-sdk/src";
+import { Authorization, PaymentGatewayClient } from "src/px-node-sdk/src";
 
 const beginRegisterInstrument = async (auth: Authorization): Promise<string> => {
 	const plexoClient = new PaymentGatewayClient()
